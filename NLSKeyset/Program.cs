@@ -52,6 +52,8 @@ public static class Program {
 		Xlib.XSync(Window.X11DisplayPtr, false);
 	
 		RobotTyper.KeyPress(key);
+		Xlib.XFlush(Window.X11DisplayPtr);
+		Xlib.XSync(Window.X11DisplayPtr, false);
 		Console.WriteLine($"Typing key: {key}");
 		
 		BindKeys();
