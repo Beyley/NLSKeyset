@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using X11;
 
 namespace NLSKeyset; 
 
@@ -13,4 +14,19 @@ public class XLibB {
 		fixed(byte* ptr = returnArr)
 			XQueryKeymap(display, ptr);
 	}
+
+	[DllImport("libX11.so.6", CharSet = CharSet.Ansi)]
+	public static extern unsafe bool XkbSetDetectableAutoRepeat(IntPtr display, bool detectable, bool* supportedRtrn);
+
+	[DllImport("libX11.so.6", CharSet = CharSet.Ansi)]
+	public static extern unsafe int XGrabKeyboard(IntPtr display, X11.Window window, bool ownerEvents, GrabMode pointerMode, GrabMode keyboardMode, ulong time);
+	
+	[DllImport("libX11.so.6", CharSet = CharSet.Ansi)]
+	public static extern unsafe void XUngrabKeyboard(IntPtr display, ulong time);
+
+	[DllImport("libXtst.so.6", CharSet = CharSet.Ansi)]
+	public static extern unsafe void XTestGrabControl(IntPtr display, bool impervious);
+	
+	[DllImport("libXtst.so.6", CharSet = CharSet.Ansi)]
+	public static extern unsafe int XTestFakeKeyEvent(IntPtr display, KeyCode code, bool value, ulong delay);
 }
