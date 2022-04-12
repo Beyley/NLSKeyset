@@ -101,6 +101,11 @@ public static class Program {
 		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode3, MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
 		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode4, MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
 		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode5, MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
+		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode1, MASK | KeyButtonMask.ShiftMask, _XWindow, false, GrabMode.Async, GrabMode.Async);
+		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode2, MASK | KeyButtonMask.ShiftMask, _XWindow, false, GrabMode.Async, GrabMode.Async);
+		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode3, MASK | KeyButtonMask.ShiftMask, _XWindow, false, GrabMode.Async, GrabMode.Async);
+		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode4, MASK | KeyButtonMask.ShiftMask, _XWindow, false, GrabMode.Async, GrabMode.Async);
+		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode5, MASK | KeyButtonMask.ShiftMask, _XWindow, false, GrabMode.Async, GrabMode.Async);
 
 		Xlib.XGrabKey(Window.X11DisplayPtr, _KeycodeDisable, MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
 		Xlib.XGrabKey(Window.X11DisplayPtr, _KeycodeEnable, ENABLE_MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
@@ -117,6 +122,11 @@ public static class Program {
 		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode3, MASK, _XWindow);
 		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode4, MASK, _XWindow);
 		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode5, MASK, _XWindow);
+		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode1, MASK | KeyButtonMask.ShiftMask, _XWindow);
+		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode2, MASK | KeyButtonMask.ShiftMask, _XWindow);
+		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode3, MASK | KeyButtonMask.ShiftMask, _XWindow);
+		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode4, MASK | KeyButtonMask.ShiftMask, _XWindow);
+		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode5, MASK | KeyButtonMask.ShiftMask, _XWindow);
 
 		Xlib.XUngrabKey(Window.X11DisplayPtr, _KeycodeDisable, MASK, _XWindow);
 		Xlib.XUngrabKey(Window.X11DisplayPtr, _KeycodeEnable, ENABLE_MASK, _XWindow);
