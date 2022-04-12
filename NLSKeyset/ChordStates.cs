@@ -28,5 +28,6 @@ public static class ChordStates {
 		{ 0b00011000, 'x' },
 		{ 0b00011001, 'y' },
 		{ 0b00011010, 'z' },
+		{ 0b00011111, ' ' },
 	};
 }
