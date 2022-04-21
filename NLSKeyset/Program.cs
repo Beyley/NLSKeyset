@@ -1,8 +1,10 @@
-﻿using System.Diagnostics;
-using Desktop.Robot;
-using Desktop.Robot.Extensions;
-using SDL2;
+﻿using Desktop.Robot;
+using Silk.NET.Maths;
+using Silk.NET.SDL;
 using X11;
+using Event = Silk.NET.SDL.Event;
+using KeyCode = X11.KeyCode;
+using Thread = System.Threading.Thread;
 
 namespace NLSKeyset;
 
@@ -21,8 +23,8 @@ public static class Program {
 	private static KeyCode _KeycodeDisable;
 	private static KeyCode _KeycodeEnable;
 
-	private static X11.Window _XWindow;
-	private static Robot      _RobotTyper;
+	private static X11.Window _XRootWindow;
+	private static Robot      _RobotTyper = new Robot();
 
 	private static bool GetKeyBit(byte bit) => (_KeyState & (1 << bit)) != 0;
 
@@ -69,17 +71,17 @@ public static class Program {
 
 	private static void TriggerKeyPress(char key) {
 		UnbindKeys();
-		Xlib.XFlush(Window.X11DisplayPtr);
-		Xlib.XSync(Window.X11DisplayPtr, false);
+		Xlib.XFlush(SDLWindow.X11DisplayPtr);
+		Xlib.XSync(SDLWindow.X11DisplayPtr, false);
 	
 		_RobotTyper.KeyPress(key);
-		Xlib.XFlush(Window.X11DisplayPtr);
-		Xlib.XSync(Window.X11DisplayPtr, false);
+		Xlib.XFlush(SDLWindow.X11DisplayPtr);
+		Xlib.XSync(SDLWindow.X11DisplayPtr, false);
 		Console.WriteLine($"Typing key: {key}");
 		
 		BindKeys();
-		Xlib.XFlush(Window.X11DisplayPtr);
-		Xlib.XSync(Window.X11DisplayPtr, false);
+		Xlib.XFlush(SDLWindow.X11DisplayPtr);
+		Xlib.XSync(SDLWindow.X11DisplayPtr, false);
 	}
 	
 	private static void TriggerChord(byte state) {
@@ -99,71 +101,73 @@ public static class Program {
 	private const KeyButtonMask ENABLE_MASK = MASK | KeyButtonMask.ShiftMask;
 
 	private static unsafe void BindKeys() {
-		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode1, MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
-		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode2, MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
-		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode3, MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
-		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode4, MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
-		Xlib.XGrabKey(Window.X11DisplayPtr, _Keycode5, MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
+		Xlib.XGrabKey(SDLWindow.X11DisplayPtr, _Keycode1, MASK, _XRootWindow, false, GrabMode.Async, GrabMode.Async);
+		Xlib.XGrabKey(SDLWindow.X11DisplayPtr, _Keycode2, MASK, _XRootWindow, false, GrabMode.Async, GrabMode.Async);
+		Xlib.XGrabKey(SDLWindow.X11DisplayPtr, _Keycode3, MASK, _XRootWindow, false, GrabMode.Async, GrabMode.Async);
+		Xlib.XGrabKey(SDLWindow.X11DisplayPtr, _Keycode4, MASK, _XRootWindow, false, GrabMode.Async, GrabMode.Async);
+		Xlib.XGrabKey(SDLWindow.X11DisplayPtr, _Keycode5, MASK, _XRootWindow, false, GrabMode.Async, GrabMode.Async);
 
 		// Xlib.XGrabKey(Window.X11DisplayPtr, _KeycodeLeft, MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
 		// Xlib.XGrabKey(Window.X11DisplayPtr, _KeycodeMiddle, MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
-		Xlib.XGrabButton(Window.X11DisplayPtr, Button.LEFT, MASK, _XWindow, false, EventMask.ButtonPressMask | EventMask.ButtonReleaseMask, GrabMode.Async, GrabMode.Async, X11.Window.None, FontCursor.None);
-		Xlib.XGrabButton(Window.X11DisplayPtr, Button.RIGHT, MASK, _XWindow, false, EventMask.ButtonPressMask | EventMask.ButtonReleaseMask, GrabMode.Async, GrabMode.Async, X11.Window.None, FontCursor.None);
+		Xlib.XGrabButton(SDLWindow.X11DisplayPtr, Button.LEFT, MASK, _XRootWindow, false, EventMask.ButtonPressMask | EventMask.ButtonReleaseMask, GrabMode.Async, GrabMode.Async, X11.Window.None, FontCursor.None);
+		Xlib.XGrabButton(SDLWindow.X11DisplayPtr, Button.RIGHT, MASK, _XRootWindow, false, EventMask.ButtonPressMask | EventMask.ButtonReleaseMask, GrabMode.Async, GrabMode.Async, X11.Window.None, FontCursor.None);
 		
-		Xlib.XGrabKey(Window.X11DisplayPtr, _KeycodeDisable, MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
-		Xlib.XGrabKey(Window.X11DisplayPtr, _KeycodeEnable, ENABLE_MASK, _XWindow, false, GrabMode.Async, GrabMode.Async);
+		Xlib.XGrabKey(SDLWindow.X11DisplayPtr, _KeycodeDisable, MASK, _XRootWindow, false, GrabMode.Async, GrabMode.Async);
+		Xlib.XGrabKey(SDLWindow.X11DisplayPtr, _KeycodeEnable, ENABLE_MASK, _XRootWindow, false, GrabMode.Async, GrabMode.Async);
 
 		bool test;
-		XLibB.XkbSetDetectableAutoRepeat(Window.X11DisplayPtr, true, &test);
+		XLibB.XkbSetDetectableAutoRepeat(SDLWindow.X11DisplayPtr, true, &test);
 		
-		Xlib.XFlush(Window.X11DisplayPtr);
+		Xlib.XFlush(SDLWindow.X11DisplayPtr);
 	}
 
 	private static void UnbindKeys() {
-		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode1, MASK, _XWindow);
-		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode2, MASK, _XWindow);
-		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode3, MASK, _XWindow);
-		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode4, MASK, _XWindow);
-		Xlib.XUngrabKey(Window.X11DisplayPtr, _Keycode5, MASK, _XWindow);
+		Xlib.XUngrabKey(SDLWindow.X11DisplayPtr, _Keycode1, MASK, _XRootWindow);
+		Xlib.XUngrabKey(SDLWindow.X11DisplayPtr, _Keycode2, MASK, _XRootWindow);
+		Xlib.XUngrabKey(SDLWindow.X11DisplayPtr, _Keycode3, MASK, _XRootWindow);
+		Xlib.XUngrabKey(SDLWindow.X11DisplayPtr, _Keycode4, MASK, _XRootWindow);
+		Xlib.XUngrabKey(SDLWindow.X11DisplayPtr, _Keycode5, MASK, _XRootWindow);
 
-		Xlib.XUngrabButton(Window.X11DisplayPtr, Button.LEFT, KeyButtonMask.Mod2Mask, _XWindow);
-		Xlib.XUngrabButton(Window.X11DisplayPtr, Button.RIGHT, KeyButtonMask.Mod2Mask, _XWindow);
+		Xlib.XUngrabButton(SDLWindow.X11DisplayPtr, Button.LEFT, KeyButtonMask.Mod2Mask, _XRootWindow);
+		Xlib.XUngrabButton(SDLWindow.X11DisplayPtr, Button.RIGHT, KeyButtonMask.Mod2Mask, _XRootWindow);
 		// Xlib.XUngrabKey(Window.X11DisplayPtr, _KeycodeLeft, MASK, _XWindow);
 		// Xlib.XUngrabKey(Window.X11DisplayPtr, _KeycodeMiddle, MASK, _XWindow);
 
-		Xlib.XUngrabKey(Window.X11DisplayPtr, _KeycodeDisable, MASK, _XWindow);
-		Xlib.XUngrabKey(Window.X11DisplayPtr, _KeycodeEnable, ENABLE_MASK, _XWindow);
+		Xlib.XUngrabKey(SDLWindow.X11DisplayPtr, _KeycodeDisable, MASK, _XRootWindow);
+		Xlib.XUngrabKey(SDLWindow.X11DisplayPtr, _KeycodeEnable, ENABLE_MASK, _XRootWindow);
 
-		Xlib.XFlush(Window.X11DisplayPtr);
+		Xlib.XFlush(SDLWindow.X11DisplayPtr);
 	}
 
 	private static void GetKeycodes() {
-		_Keycode5 = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.a);
-		_Keycode4 = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.s);
-		_Keycode3 = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.h);
-		_Keycode2 = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.t);
-		_Keycode1 = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.space);
+		_Keycode5 = Xlib.XKeysymToKeycode(SDLWindow.X11DisplayPtr, (KeySym)KeySyms.a);
+		_Keycode4 = Xlib.XKeysymToKeycode(SDLWindow.X11DisplayPtr, (KeySym)KeySyms.s);
+		_Keycode3 = Xlib.XKeysymToKeycode(SDLWindow.X11DisplayPtr, (KeySym)KeySyms.h);
+		_Keycode2 = Xlib.XKeysymToKeycode(SDLWindow.X11DisplayPtr, (KeySym)KeySyms.t);
+		_Keycode1 = Xlib.XKeysymToKeycode(SDLWindow.X11DisplayPtr, (KeySym)KeySyms.space);
 
 		// _KeycodeLeft = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.KP_Multiply);
 		// _KeycodeMiddle = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.KP_Subtract);
 
-		_KeycodeDisable = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.g);
-		_KeycodeEnable  = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.space);
-		_KeycodeControl  = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.Control_L);
+		_KeycodeDisable = Xlib.XKeysymToKeycode(SDLWindow.X11DisplayPtr, (KeySym)KeySyms.g);
+		_KeycodeEnable  = Xlib.XKeysymToKeycode(SDLWindow.X11DisplayPtr, (KeySym)KeySyms.space);
+		_KeycodeControl  = Xlib.XKeysymToKeycode(SDLWindow.X11DisplayPtr, (KeySym)KeySyms.Control_L);
 	}
 
 	public static bool IsKeyDown(byte[] arr, KeyCode code) => (arr[(byte)code >> 3] & (1 << ((byte)code & 7))) == 1 << ((byte)code & 7);
 
 	public static unsafe void Main(string[] args) {
-		Window.X11DisplayPtr = Xlib.XOpenDisplay(":0");
+		if (!OperatingSystem.IsLinux())
+			throw new Exception("Only Linux is supported currently!");
 		
-		_XWindow = Xlib.XDefaultRootWindow(Window.X11DisplayPtr);
-
-		_RobotTyper = new Robot();
+		// Window.X11DisplayPtr = Xlib.XOpenDisplay(":0");
+		SDLWindow.Initialize();
+		
+		_XRootWindow = Xlib.XDefaultRootWindow(SDLWindow.X11DisplayPtr);
 
 		GetKeycodes();
 		BindKeys();
-		Xlib.XFlush(Window.X11DisplayPtr);
+		Xlib.XFlush(SDLWindow.X11DisplayPtr);
 
 		byte[] queryReturnArr = new byte[32];
 
@@ -181,9 +185,10 @@ public static class Program {
 
 		uint pointerMask = 0;
 		
+		Event @event;
 		while (continueRunning) {
-			XLibB.QueryKeymap(Window.X11DisplayPtr, queryReturnArr);
-			Xlib.XQueryPointer(Window.X11DisplayPtr, _XWindow, ref pointerWindow, ref pointerChild, ref pointerRootX, ref pointerRootY, ref pointerWinX, ref pointerWinY, ref pointerMask);
+			XLibB.QueryKeymap(SDLWindow.X11DisplayPtr, queryReturnArr);
+			Xlib.XQueryPointer(SDLWindow.X11DisplayPtr, _XRootWindow, ref pointerWindow, ref pointerChild, ref pointerRootX, ref pointerRootY, ref pointerWinX, ref pointerWinY, ref pointerMask);
 
 			SetKeyBit(0, IsKeyDown(queryReturnArr, _Keycode1)); //Space
 			SetKeyBit(1, IsKeyDown(queryReturnArr, _Keycode2)); //T
@@ -195,12 +200,44 @@ public static class Program {
 			
 			SetKeyBit(7, (pointerMask & (1 << 8)) != 0);  //Left
 			SetKeyBit(6, (pointerMask & (1 << 10)) != 0); //Right
+
+			if(SDLWindow.SDL.PollEvent(&@event) != 0) {
+				if(@event.Type == (ulong)EventType.Quit) {
+					continueRunning = false;
+				}
+			}
+
+			SDLWindow.Clear(new(0, 0, 0));
+
+			
+			SDLWindow.DrawRect(new(100, 110, 500, 110), Color.White, false);
+
+			SDLWindow.DrawLine(Color.White, new(340, 110), new(340, 0));
+			SDLWindow.DrawLine(Color.White, new(360, 110), new(360, 0));
+			
+			SDLWindow.DrawOctagon(Color.White, new(175, 163));
+			SDLWindow.DrawOctagon(Color.White, new(525, 163));
+
+			SDLWindow.DrawRect(new(100, 220, 500, 330), Color.White, false);
+
+			SDLWindow.DrawKey(new(110, 220), GetKeyBit(4));
+			SDLWindow.DrawKey(new(210, 220), GetKeyBit(3));
+			SDLWindow.DrawKey(new(310, 220), GetKeyBit(2));
+			SDLWindow.DrawKey(new(410, 220), GetKeyBit(1));
+			SDLWindow.DrawKey(new(510, 220), GetKeyBit(0));
+			// SDLWindow.DrawRect(new(110, 250, 80, 300), new Color(255, 255, 255), false);
+			// SDLWindow.DrawRect(new(210, 250, 80, 300), new Color(255, 255, 255), false);
+			// SDLWindow.DrawRect(new(310, 250, 80, 300), new Color(255, 255, 255), false);
+			// SDLWindow.DrawRect(new(410, 250, 80, 300), new Color(255, 255, 255), false);
+			// SDLWindow.DrawRect(new(510, 250, 80, 300), new Color(255, 255, 255), false);
+
+			SDLWindow.SDL.RenderPresent(SDLWindow.SDLRendererPtr);
 			
 			Thread.Sleep(5);
 		}
 
 		UnbindKeys();
-
-		Xlib.XCloseDisplay(Window.X11DisplayPtr);
+		
+		SDLWindow.Destroy();
 	}
 }
