@@ -12,6 +12,7 @@ public static class SDLWindow {
 	public static unsafe  Window*   SDLWindowPtr;
 	public static unsafe  Renderer* SDLRendererPtr;
 	private static unsafe Texture*  WhiteTexture;
+	private static unsafe Texture*  DisabledTexture;
 
 	public static IntPtr X11WindowPtr;
 	public static IntPtr X11DisplayPtr;
@@ -45,8 +46,11 @@ public static class SDLWindow {
 		}
 	}
 
+	public const int WIDTH  = 700;
+	public const int HEIGHT = 600;
+	
 	private static unsafe void CreateWindow() {
-		SDLWindowPtr = SDL.CreateWindow("NLS Keyset", (int)SDL_WINDOWPOS_UNDEFINED, (int)SDL_WINDOWPOS_UNDEFINED, 700, 600, 0);
+		SDLWindowPtr = SDL.CreateWindow("NLS Keyset", (int)SDL_WINDOWPOS_UNDEFINED, (int)SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, (uint)WindowFlags.WindowResizable);
 		if (SDLWindowPtr == (void*)0) {
 			throw new Exception($"SDL Failed to create window! msg:{SDL.GetErrorS()}");
 		}
@@ -57,14 +61,21 @@ public static class SDLWindow {
 		if (SDLWindowPtr == (void*)0) {
 			throw new Exception($"SDL Failed to create renderer! msg:{SDL.GetErrorS()}");
 		}
+
+		SDL.RenderSetLogicalSize(SDLRendererPtr, WIDTH, HEIGHT);
 		
 		WhiteTexture = SDL.CreateTexture(SDLRendererPtr, (uint)PixelFormatEnum.PixelformatRgba32, (int)TextureAccess.TextureaccessStatic, 1, 1);
-		Rectangle<int> rect = new Rectangle<int>(0, 0, 1, 1);
-		uint           a    = 0xFFFFFFFF;
-		int updateResult = SDL.UpdateTexture(WhiteTexture, ref rect, (void*)&a, 4);
-		if (updateResult != 0) {
+		Rectangle<int> rect         = new(0, 0, 1, 1);
+		Color          color        = Color.White;
+		int            updateResult = SDL.UpdateTexture(WhiteTexture, ref rect, &color, 4);
+		if (updateResult != 0) 
 			throw new Exception($"SDL Failed to create texture! msg:{SDL.GetErrorS()}");
-		}
+
+		DisabledTexture = SDL.CreateTexture(SDLRendererPtr, (uint)PixelFormatEnum.PixelformatRgba32, (int)TextureAccess.TextureaccessStatic, 1, 1);
+		color           = Color.Grey;
+		updateResult    = SDL.UpdateTexture(DisabledTexture, ref rect, &color, 4);
+		if (updateResult != 0)
+			throw new Exception($"SDL Failed to create texture! msg:{SDL.GetErrorS()}");
 	}
 
 	private static unsafe void GetWindowAndDisplayPtr() {
@@ -117,10 +128,27 @@ public static class SDLWindow {
 		}
 	}
 	
-	public static unsafe void DrawKey(Vector2D<int> pos, bool filled) {
+	public static unsafe void DrawKey(Vector2D<int> pos, bool filled, bool enabled) {
 		const int width      = 80;
 		const int height     = 320;
 		const int curveAmount = 10;
+
+		if (filled) {
+			Color fillColor = enabled ? Color.White : Color.Grey;
+
+			DrawRect(new(pos, new(width, height - curveAmount)), fillColor, true);
+			DrawRect(new(new(pos.X              + curveAmount, pos.Y + height - curveAmount), new(width - curveAmount - curveAmount, curveAmount)), fillColor, true);
+
+			Rectangle<int> srcRect   = new(0, 0, 1, 1);
+			float          destWidth = MathF.Sqrt(2 * curveAmount * curveAmount);
+			FRect          destRect  = new(pos.X, pos.Y + height - curveAmount, destWidth, destWidth);
+			FPoint         point     = new(0, 0);
+
+			SDL.RenderCopyExF(SDLRendererPtr, enabled ? WhiteTexture : DisabledTexture, &srcRect, &destRect, -45d, &point, RendererFlip.FlipNone);
+			
+			destRect = new(pos.X + width + 1, pos.Y + height - curveAmount + 1, destWidth, destWidth);
+			SDL.RenderCopyExF(SDLRendererPtr, enabled ? WhiteTexture : DisabledTexture, &srcRect, &destRect, -180 - 45, &point, RendererFlip.FlipNone);
+		}
 		
 		//Top line
 		// DrawLine(Color.White, pos, new(pos.X + width, pos.Y));
@@ -139,20 +167,5 @@ public static class SDLWindow {
 		
 		//Right line
 		DrawLine(Color.White, new(pos.X + width, pos.Y), new(pos.X + width, pos.Y + height - curveAmount));
-
-		if (filled) {
-			DrawRect(new(pos, new(width, height - curveAmount)), Color.White, true);
-			DrawRect(new(new(pos.X + curveAmount, pos.Y + height - curveAmount), new(width - curveAmount - curveAmount, curveAmount)), Color.White, true);
-
-			Rectangle<int> srcRect   = new(0, 0, 1, 1);
-			float          destWidth = MathF.Sqrt(2 * curveAmount * curveAmount);
-			FRect          destRect  = new(pos.X, pos.Y + height - curveAmount, destWidth, destWidth);
-			FPoint         point     = new(0, 0);
-
-			SDL.RenderCopyExF(SDLRendererPtr, WhiteTexture, &srcRect, &destRect, -45d, &point, RendererFlip.FlipNone);
-			
-			destRect = new(pos.X + width + 1, pos.Y + height - curveAmount + 1, destWidth, destWidth);
-			SDL.RenderCopyExF(SDLRendererPtr, WhiteTexture, &srcRect, &destRect, -180 - 45, &point, RendererFlip.FlipNone);
-		}
 	}
 }

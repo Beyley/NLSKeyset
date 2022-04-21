@@ -220,11 +220,11 @@ public static class Program {
 
 			SDLWindow.DrawRect(new(100, 220, 500, 330), Color.White, false);
 
-			SDLWindow.DrawKey(new(110, 220), GetKeyBit(4));
-			SDLWindow.DrawKey(new(210, 220), GetKeyBit(3));
-			SDLWindow.DrawKey(new(310, 220), GetKeyBit(2));
-			SDLWindow.DrawKey(new(410, 220), GetKeyBit(1));
-			SDLWindow.DrawKey(new(510, 220), GetKeyBit(0));
+			SDLWindow.DrawKey(new(110, 220), GetKeyBit(4), _Enabled);
+			SDLWindow.DrawKey(new(210, 220), GetKeyBit(3), _Enabled);
+			SDLWindow.DrawKey(new(310, 220), GetKeyBit(2), _Enabled);
+			SDLWindow.DrawKey(new(410, 220), GetKeyBit(1), _Enabled);
+			SDLWindow.DrawKey(new(510, 220), GetKeyBit(0), _Enabled);
 			// SDLWindow.DrawRect(new(110, 250, 80, 300), new Color(255, 255, 255), false);
 			// SDLWindow.DrawRect(new(210, 250, 80, 300), new Color(255, 255, 255), false);
 			// SDLWindow.DrawRect(new(310, 250, 80, 300), new Color(255, 255, 255), false);
