@@ -17,6 +17,7 @@ public static class Program {
 	private static KeyCode _KeycodeLeft;
 	private static KeyCode _KeycodeMiddle;
 
+	private static KeyCode _KeycodeControl;
 	private static KeyCode _KeycodeDisable;
 	private static KeyCode _KeycodeEnable;
 
@@ -28,7 +29,7 @@ public static class Program {
 	private static bool _Enabled = true;
 	
 	// private static bool triggered = false;
-	private static byte _ToTrigger;
+	private static byte    _ToTrigger;
 	private static void SetKeyBit(byte bit, bool value) {
 		byte origState = _KeyState;
 
@@ -146,9 +147,12 @@ public static class Program {
 		// _KeycodeLeft = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.KP_Multiply);
 		// _KeycodeMiddle = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.KP_Subtract);
 
-		_KeycodeDisable  = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.g);
-		_KeycodeEnable = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.space);
+		_KeycodeDisable = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.g);
+		_KeycodeEnable  = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.space);
+		_KeycodeControl  = Xlib.XKeysymToKeycode(Window.X11DisplayPtr, (KeySym)KeySyms.Control_L);
 	}
+
+	public static bool IsKeyDown(byte[] arr, KeyCode code) => (arr[(byte)code >> 3] & (1 << ((byte)code & 7))) == 1 << ((byte)code & 7);
 
 	public static unsafe void Main(string[] args) {
 		Window.X11DisplayPtr = Xlib.XOpenDisplay(":0");
@@ -181,20 +185,13 @@ public static class Program {
 			XLibB.QueryKeymap(Window.X11DisplayPtr, queryReturnArr);
 			Xlib.XQueryPointer(Window.X11DisplayPtr, _XWindow, ref pointerWindow, ref pointerChild, ref pointerRootX, ref pointerRootY, ref pointerWinX, ref pointerWinY, ref pointerMask);
 
-			// foreach (byte b in queryReturnArr) {
-			// 	if(b != 0)
-			// 		Debugger.Break();
-			// }
+			SetKeyBit(0, IsKeyDown(queryReturnArr, _Keycode1)); //Space
+			SetKeyBit(1, IsKeyDown(queryReturnArr, _Keycode2)); //T
+			SetKeyBit(2, IsKeyDown(queryReturnArr, _Keycode3)); //H
+			SetKeyBit(3, IsKeyDown(queryReturnArr, _Keycode4)); //S
+			SetKeyBit(4, IsKeyDown(queryReturnArr, _Keycode5)); //A
 			
-			// Console.WriteLine($"Left: {(pointerMask & (1 << 8)) != 0} Right: {(pointerMask & (1 << 10)) != 0}");
-			
-			SetKeyBit(0, (queryReturnArr[8] & 2)   == 2); //Space
-			SetKeyBit(1, (queryReturnArr[5] & 2)   == 2); //T
-			SetKeyBit(2, (queryReturnArr[5] & 1)   == 1); //H
-			SetKeyBit(3, (queryReturnArr[4] & 128) == 128); //S
-			SetKeyBit(4, (queryReturnArr[4] & 64)  == 64); //A
-			
-			SetKeyBit(5, (queryReturnArr[4] & 32) == 32); //Control
+			SetKeyBit(5, IsKeyDown(queryReturnArr, _KeycodeControl)); //Control
 			
 			SetKeyBit(7, (pointerMask & (1 << 8)) != 0);  //Left
 			SetKeyBit(6, (pointerMask & (1 << 10)) != 0); //Right

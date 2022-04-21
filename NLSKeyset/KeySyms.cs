@@ -805,4 +805,5 @@ public enum KeySyms : long {
 	Brl_dot8 = 0x0e08,
 	Brl_dot9 = 0x0e09,
 	Brl_dot10 = 0x0e0a,
+	Control_L = 0xffe3
 }
