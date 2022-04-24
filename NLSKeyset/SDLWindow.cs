@@ -76,6 +76,8 @@ public static class SDLWindow {
 		updateResult    = SDL.UpdateTexture(DisabledTexture, ref rect, &color, 4);
 		if (updateResult != 0)
 			throw new Exception($"SDL Failed to create texture! msg:{SDL.GetErrorS()}");
+
+		SDL.SetRenderDrawBlendMode(SDLRendererPtr, BlendMode.BlendmodeBlend);
 	}
 
 	private static unsafe void GetWindowAndDisplayPtr() {

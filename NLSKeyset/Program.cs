@@ -1,4 +1,7 @@
-﻿using Desktop.Robot;
+﻿using System.Diagnostics;
+using System.Numerics;
+using Desktop.Robot;
+using FontStashSharp;
 using Silk.NET.Maths;
 using Silk.NET.SDL;
 using X11;
@@ -25,6 +28,9 @@ public static class Program {
 
 	private static X11.Window _XRootWindow;
 	private static Robot      _RobotTyper = new Robot();
+
+	private static char   _LastChord;
+	private static double _LastChordTime;
 
 	private static bool GetKeyBit(byte bit) => (_KeyState & (1 << bit)) != 0;
 
@@ -91,6 +97,8 @@ public static class Program {
 		if (ChordStates.States.TryGetValue(state, out char key)) {
 			Console.WriteLine($"Typing chord {state}:{key}");
 			TriggerKeyPress(key);
+			_LastChord     = key;
+			_LastChordTime = (double)Stopwatch.GetTimestamp() / Stopwatch.Frequency;
 		}
 		else {
 			Console.WriteLine($"Invalid Chord! {state:x2}");
@@ -184,7 +192,13 @@ public static class Program {
 		int pointerWinY = 0;
 
 		uint pointerMask = 0;
+
+		SDLFontStashSharpRenderer renderer = new();
 		
+		FontSystem fontSystem = new(new FontSystemSettings());
+		fontSystem.AddFont(File.ReadAllBytes("font.ttf"));
+		DynamicSpriteFont? font = fontSystem.GetFont(50);
+
 		Event @event;
 		while (continueRunning) {
 			XLibB.QueryKeymap(SDLWindow.X11DisplayPtr, queryReturnArr);
@@ -208,7 +222,6 @@ public static class Program {
 			}
 
 			SDLWindow.Clear(new(0, 0, 0));
-
 			
 			SDLWindow.DrawRect(new(100, 110, 500, 110), Color.White, false);
 
@@ -231,8 +244,15 @@ public static class Program {
 			// SDLWindow.DrawRect(new(410, 250, 80, 300), new Color(255, 255, 255), false);
 			// SDLWindow.DrawRect(new(510, 250, 80, 300), new Color(255, 255, 255), false);
 
-			SDLWindow.SDL.RenderPresent(SDLWindow.SDLRendererPtr);
+			if(((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency) - _LastChordTime < 1d || !_Enabled) {
+				string toDraw = _Enabled ? $"{_LastChord}" : "Disabled";
+
+				Vector2 measureString = font.MeasureString(toDraw);
+				font.DrawText(renderer, toDraw, new((SDLWindow.WIDTH / 2f) - (measureString.X / 2f), 165 - (measureString.Y / 2f)), System.Drawing.Color.White);
+			}
 			
+			SDLWindow.SDL.RenderPresent(SDLWindow.SDLRendererPtr);
+
 			Thread.Sleep(5);
 		}
 
