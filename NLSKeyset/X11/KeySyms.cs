@@ -1,4 +1,4 @@
-namespace NLSKeyset;
+namespace NLSKeyset.X11;
 
 public enum KeySyms : long {
 	nul = 0x0000,
@@ -805,5 +805,6 @@ public enum KeySyms : long {
 	Brl_dot8 = 0x0e08,
 	Brl_dot9 = 0x0e09,
 	Brl_dot10 = 0x0e0a,
-	Control_L = 0xffe3
+	Control_L = 0xffe3,
+	Control_R = 0xffe4
 }
